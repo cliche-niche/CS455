@@ -4,12 +4,28 @@ import (
 	"fmt"
 	"flag"
 	"log"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/cliche-niche/CS455/blob"
 	"github.com/cliche-niche/CS455/util"
 )
+
+const autoSaveInterval = 300
+
+func autoSave(b *blob.Blob, textArea *tview.TextArea) {
+	for {
+		b.SetContents(textArea.GetText())
+		go func() {
+			err := b.SaveBlob()
+			if err != nil {
+				panic(err)
+			}
+		}()
+		time.Sleep(autoSaveInterval * time.Second)
+	}
+}
 
 func runApp(b *blob.Blob) {
 	app := tview.NewApplication()
@@ -64,6 +80,8 @@ func runApp(b *blob.Blob) {
 
 	pages.AddPage("main", mainView, true, true).
 		AddPage("exit", modal, false, false)
+
+	go autoSave(b, textArea)
 
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Key() == tcell.KeyCtrlS {
