@@ -20,6 +20,8 @@ type Store interface {
 	InitBlob(name string, blobtype string, location string) error
 	CloseBlob() error
 	EditBlob(updatedContent string) error
+	GetContents() string
+	SetContents(contents string) error
 	SaveBlob() error
 	DeleteBlob() error
 }
@@ -35,10 +37,13 @@ func (b *Blob) InitBlob(name string, blobtype string, location string) error {
 		return err
 	}
 
-	b.updatedAt = time.Now()
-
 	// read contents of file into b.contents
-	b.fptr.Read([]byte(b.contents))
+	fileInfo, err := b.fptr.Stat()
+	buffer := make([]byte, fileInfo.Size())
+	b.fptr.Read(buffer)
+	b.contents = string(buffer)
+
+	b.updatedAt = time.Now()
 
 	return nil
 }
@@ -57,10 +62,33 @@ func (b *Blob) EditBlob(updatedContent string) error {
 	return nil
 }
 
+// GetContents fetches the contents of blob 
+func (b *Blob) GetContents() string {
+	return b.contents
+}
+
+func (b *Blob) SetContents(contents string) error {
+	b.contents = contents
+	return nil
+}
+
 // SaveBlob saves the contents of the blob to the file
 func (b *Blob) SaveBlob() error {
 	b.updatedAt = time.Now()
-	b.fptr.Write([]byte(b.contents))
+
+	err := b.fptr.Truncate(0)
+	if err!= nil {
+		return err
+	}
+	_, err = b.fptr.Seek(0, 0)
+	if err!= nil {
+		return err
+	}
+
+	_, err = b.fptr.Write([]byte(b.contents))
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
