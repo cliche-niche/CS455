@@ -17,6 +17,8 @@ func runApp(b *blob.Blob) {
 	textArea := tview.NewTextArea().
 		SetPlaceholder("Enter text here...")
 	textArea.SetTitle("Text Area").SetBorder(true)
+	helpInfo := tview.NewTextView().
+		SetText(" Press Ctrl-S to save, press Ctrl-C to exit")
 
 	position := tview.NewTextView().
 		SetDynamicColors(true).
@@ -39,9 +41,29 @@ func runApp(b *blob.Blob) {
 	mainView := tview.NewGrid().
 		SetRows(0, 1).
 		AddItem(textArea, 0, 0, 1, 2, 0, 0, true).
+		AddItem(helpInfo, 1, 0, 1, 1, 0, 0, false).
 		AddItem(position, 1, 1, 1, 1, 0, 0, false)
 
-	pages.AddPage("main", mainView, true, true)
+	modal := tview.NewModal().
+				SetText("You have unsaved changes. Do you want to save them?").
+				AddButtons([]string {"Yes", "No", "Cancel"}).
+				SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+						if buttonIndex == 0 {
+							b.SetContents(textArea.GetText())
+							err := b.SaveBlob()
+							if err != nil {
+								panic(err);
+							}
+							app.Stop()
+						} else if buttonIndex == 1 {
+							app.Stop()
+						} else {
+							pages.SwitchToPage("main")
+						}
+				})
+
+	pages.AddPage("main", mainView, true, true).
+		AddPage("exit", modal, false, false)
 
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Key() == tcell.KeyCtrlS {
@@ -53,7 +75,14 @@ func runApp(b *blob.Blob) {
 				}
 			}()
 			return nil
-		} 
+		} else if event.Key() == tcell.KeyCtrlC {
+			if b.GetContents() == textArea.GetText() {
+				return event
+			} else {
+				pages.ShowPage("exit")
+				return nil
+			}
+		}
 		return event
 	})
 
