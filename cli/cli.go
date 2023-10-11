@@ -93,6 +93,9 @@ func (cli *Cli) AppInputCapture() {
 					cli.pages.ShowPage("exit")
 					return nil
 				}
+			} else if event.Key() == tcell.KeyF1 {
+				cli.pages.ShowPage("help")
+				return nil
 			}
 			return event
 		})
