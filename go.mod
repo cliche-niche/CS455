@@ -1,6 +1,6 @@
 module github.com/cliche-niche/CS455
 
-go 1.21.1
+go 1.21
 
 require (
 	github.com/gdamore/tcell/v2 v2.6.0
