@@ -38,10 +38,10 @@ type View struct {
 
 func (mv *View) InitView(b *blob.Blob) {
 	mv.textArea = tview.NewTextArea().
-		SetPlaceholder("Enter text here...")
+		SetPlaceholder("Enter text here...").SetClipboard(nil, nil)
 	mv.textArea.SetTitle("Text Area").SetBorder(true)
 	helpInfo := tview.NewTextView().
-		SetText(" Press Ctrl-S to save, press Ctrl-C to exit")
+		SetText(" Press F1 for help, Ctrl-S to save, Ctrl-C to exit")
 
 	position := tview.NewTextView().
 		SetDynamicColors(true).
@@ -82,7 +82,7 @@ func (mv *View) InitViewDir(rootDir string, cli *Cli) {
 	mv.nextB = nil
 	mv.textArea = nil
 	helpInfo := tview.NewTextView().
-		SetText(" Press F1 for help, press Ctrl-C to exit")
+		SetText(" Press F1 for help, Ctrl-S to save, Ctrl-C to exit")
 	position := tview.NewTextView().
 		SetDynamicColors(true).
 		SetTextAlign(tview.AlignRight)

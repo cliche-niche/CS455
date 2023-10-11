@@ -50,6 +50,7 @@ func main() {
 
 	cli.AddExitModal()
 	cli.AppInputCapture()
+	cli.AddHelp()
 
 	err = cli.RunApp()
 	if err != nil {
