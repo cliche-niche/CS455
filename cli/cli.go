@@ -93,6 +93,12 @@ func (cli *Cli) AppInputCapture() {
 					cli.pages.ShowPage("exit")
 					return nil
 				}
+			} else if event.Key() == tcell.KeyCtrlX {
+				selectLineText(cli, event)
+				return event
+			} else if event.Key() == tcell.KeyCtrlQ {
+				selectLineText(cli, event)
+				return event
 			} else if event.Key() == tcell.KeyF1 {
 				cli.pages.ShowPage("help")
 				return nil
@@ -218,4 +224,41 @@ func (cli *Cli) RunApp() error{
 			EnableMouse(true).Run()
 	
 	return err
+}
+
+func selectLineText(cli *Cli, event *tcell.EventKey) {
+	// No selection -> Application selects text
+	if cli.view.textArea.HasSelection() {
+		return
+	}
+	
+	row, _, _, _ := cli.view.textArea.GetCursor()
+	screenText := cli.view.textArea.GetText()
+	lStart, lEnd := 0, 0
+	var initStart bool
+	
+	if row == 0 {
+		lStart = 0
+		initStart = true
+	}
+
+	for i, a := range screenText {
+		if a == '\n' {
+			row--
+		}
+		if row == 0 && !initStart {
+			// i^th character will be '\n', therefore line starts from (i+1)^th character
+			lStart = i + 1
+			initStart = true
+		}
+		if row == -1 {
+			lEnd = i
+			break
+		}
+
+		// For last character
+		lEnd = i + 2
+	}
+	
+	cli.view.textArea.Select(lStart, lEnd - 1)
 }
