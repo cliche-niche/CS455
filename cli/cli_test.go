@@ -50,3 +50,13 @@ func TestFileChangeModal(t *testing.T) {
 
 	assert.True(t, cli.pages.HasPage("fileChange"))
 }
+
+func TestAddHelp(t *testing.T) {
+	var cli Cli
+	var b blob.Blob
+
+	cli.InitCli(&b, "", false)
+	cli.AddHelp()
+
+	assert.True(t, cli.pages.HasPage("help"))
+}
