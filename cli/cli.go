@@ -1,18 +1,23 @@
 package cli
 
 import (
-	"time"
 	"log"
+	"time"
 
+	"github.com/cliche-niche/CS455/blob"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/cliche-niche/CS455/blob"
 )
 
-const autoSaveInterval = 300
+const autoSaveInterval = 30
 
-func autoSave(b *blob.Blob, textArea *tview.TextArea) {
+func autoSave(b *blob.Blob, textArea *tview.TextArea, toggle *chan bool) {
 	for {
+		if <-(*toggle) {
+			(*toggle) <- true
+		} else {
+			return
+		}
 		b.SetContents(textArea.GetText())
 		err := b.SaveBlob()
 		if err != nil {
@@ -22,12 +27,13 @@ func autoSave(b *blob.Blob, textArea *tview.TextArea) {
 	}
 }
 
-type Cli struct  {
-	app 	*tview.Application 
-	view 	*View
-	b 		*blob.Blob
-	pages	*tview.Pages
-	withDir	bool
+type Cli struct {
+	app     *tview.Application
+	view    *View
+	b       *blob.Blob
+	pages   *tview.Pages
+	withDir bool
+	toggle  chan bool
 }
 
 func (cli *Cli) InitCli(b *blob.Blob, dirPath string, withDir bool) {
@@ -35,6 +41,7 @@ func (cli *Cli) InitCli(b *blob.Blob, dirPath string, withDir bool) {
 	cli.pages = tview.NewPages()
 	cli.b = b
 	cli.withDir = withDir
+	cli.toggle = make(chan bool, 1)
 
 	var view View
 	if withDir {
@@ -49,36 +56,36 @@ func (cli *Cli) InitCli(b *blob.Blob, dirPath string, withDir bool) {
 
 func (cli *Cli) AddExitModal() {
 	modal := tview.NewModal().
-			SetText("You have unsaved changes. Do you want to save them?").
-			AddButtons([]string {"Yes", "No"}).
-			SetDoneFunc(
-				func(buttonIndex int, buttonLabel string) {
-					if buttonIndex == 0 {
-						cli.b.SetContents(cli.view.textArea.GetText())
-						err := cli.b.SaveBlob()
-						if err != nil {
-							panic(err);
-						}
+		SetText("You have unsaved changes. Do you want to save them?").
+		AddButtons([]string{"Yes", "No"}).
+		SetDoneFunc(
+			func(buttonIndex int, buttonLabel string) {
+				if buttonIndex == 0 {
+					cli.b.SetContents(cli.view.textArea.GetText())
+					err := cli.b.SaveBlob()
+					if err != nil {
+						panic(err)
 					}
-					cli.app.Stop()
-					defer func() {
-						if err := cli.b.CloseBlob(); err != nil {
-							log.Fatalf("Failed to close the blob: %v", err)
-						}
-					}()
-				})
+				}
+				cli.app.Stop()
+				defer func() {
+					if err := cli.b.CloseBlob(); err != nil {
+						log.Fatalf("Failed to close the blob: %v", err)
+					}
+				}()
+			})
 
 	cli.pages.AddPage("exit", modal, false, false)
 }
 
 func (cli *Cli) AddErrorModal() {
 	modal := tview.NewModal().
-			SetText("An unexpected error occured while doing the previous task.").
-			AddButtons([]string {"Confirm"}).
-			SetDoneFunc(
-				func(buttonIndex int, buttonLabel string) {
-					cli.pages.HidePage("error")
-				})
+		SetText("An unexpected error occured while doing the previous task.").
+		AddButtons([]string{"Confirm"}).
+		SetDoneFunc(
+			func(buttonIndex int, buttonLabel string) {
+				cli.pages.HidePage("error")
+			})
 
 	cli.pages.AddPage("error", modal, false, false)
 }
@@ -87,11 +94,11 @@ func (cli *Cli) AppInputCapture() {
 	cli.app.SetInputCapture(
 		func(event *tcell.EventKey) *tcell.EventKey {
 			if event.Key() == tcell.KeyCtrlS {
-				cli.b.SetContents(cli.view.textArea.GetText());
+				cli.b.SetContents(cli.view.textArea.GetText())
 				go func() {
 					err := cli.b.SaveBlob()
 					if err != nil {
-						panic(err);
+						panic(err)
 					}
 				}()
 				return nil
@@ -111,11 +118,17 @@ func (cli *Cli) AppInputCapture() {
 			} else if event.Key() == tcell.KeyCtrlQ {
 				selectLineText(cli, event)
 				return event
-			} else if event.Key() == tcell.KeyCtrlF {
-				cli.pages.ShowPage("findandreplace")
-				return nil
 			} else if event.Key() == tcell.KeyF1 {
 				cli.pages.ShowPage("help")
+				return nil
+			} else if event.Key() == tcell.KeyCtrlO {
+				if len(cli.toggle) == 0 {
+					cli.toggle <- true
+					go autoSave(cli.b, cli.view.textArea, &(cli.toggle))
+				} else {
+					<-cli.toggle
+					cli.toggle <- false
+				}
 				return nil
 			}
 			return event
@@ -124,27 +137,27 @@ func (cli *Cli) AppInputCapture() {
 
 func (cli *Cli) FileChangeModal() {
 	modal := tview.NewModal().
-			SetText("You have unsaved changes. Do you want to save them?").
-			AddButtons([]string {"Yes", "No"}).
-			SetDoneFunc(
-				func(buttonIndex int, buttonLabel string) {
+		SetText("You have unsaved changes. Do you want to save them?").
+		AddButtons([]string{"Yes", "No"}).
+		SetDoneFunc(
+			func(buttonIndex int, buttonLabel string) {
 
-					if buttonIndex == 0 {
-						cli.b.SetContents(cli.view.textArea.GetText())
-						err := cli.b.SaveBlob()
-						if err != nil {
-							panic(err);
-						}
+				if buttonIndex == 0 {
+					cli.b.SetContents(cli.view.textArea.GetText())
+					err := cli.b.SaveBlob()
+					if err != nil {
+						panic(err)
 					}
-					if err := cli.b.CloseBlob(); err != nil {
-						log.Fatalf("Failed to close the blob: %v", err)
-					}
+				}
+				if err := cli.b.CloseBlob(); err != nil {
+					log.Fatalf("Failed to close the blob: %v", err)
+				}
 
-					cli.pages.SwitchToPage("main")
-					cli.view.mainView.RemoveItem(cli.view.textArea)
-					cli.view.NewTextArea(cli.view.nextB)
-					cli.b = cli.view.nextB
-				})
+				cli.pages.SwitchToPage("main")
+				cli.view.mainView.RemoveItem(cli.view.textArea)
+				cli.view.NewTextArea(cli.view.nextB)
+				cli.b = cli.view.nextB
+			})
 
 	cli.pages.AddPage("fileChange", modal, true, false)
 }
@@ -168,6 +181,7 @@ func (cli *Cli) AddHelp() {
 [yellow]Alt-Right arrow[white]:  Scroll the page to the right.
 [yellow]Alt-B, Ctrl-Left arrow[white]: Move back by one word.
 [yellow]Alt-F, Ctrl-Right arrow[white]: Move forward by one word.
+[yellow]Ctrl-O, Autosave[white]: Turn autosave on or off.
 
 [blue]Press Enter for more help, press Escape to return.`)
 	help2 := tview.NewTextView().
@@ -203,7 +217,7 @@ Double-click to select a word.
 
 [blue]Press Enter for more help, press Escape to return.`)
 
-help := tview.NewFrame(help1).
+	help := tview.NewFrame(help1).
 		SetBorders(1, 1, 0, 0, 2, 2)
 	help.SetBorder(true).
 		SetTitle("Help").
@@ -226,18 +240,18 @@ help := tview.NewFrame(help1).
 		})
 
 	cli.pages.AddPage("help", tview.NewGrid().
-			SetColumns(0, 64, 0).
-			SetRows(0, 22, 0).
-			AddItem(help, 1, 1, 1, 1, 0, 0, true), true, false)
+		SetColumns(0, 64, 0).
+		SetRows(0, 22, 0).
+		AddItem(help, 1, 1, 1, 1, 0, 0, true), true, false)
 }
 
-func (cli *Cli) RunApp() error{
+func (cli *Cli) RunApp() error {
 
 	// go autoSave(cli.b, cli.view.textArea)
 
-	err := cli.app.SetRoot(cli.pages,true).
-			EnableMouse(true).Run()
-	
+	err := cli.app.SetRoot(cli.pages, true).
+		EnableMouse(true).Run()
+
 	return err
 }
 
@@ -246,12 +260,12 @@ func selectLineText(cli *Cli, event *tcell.EventKey) {
 	if cli.view.textArea.HasSelection() {
 		return
 	}
-	
+
 	row, _, _, _ := cli.view.textArea.GetCursor()
 	screenText := cli.view.textArea.GetText()
 	lStart, lEnd := 0, 0
 	var initStart bool
-	
+
 	if row == 0 {
 		lStart = 0
 		initStart = true
@@ -274,6 +288,6 @@ func selectLineText(cli *Cli, event *tcell.EventKey) {
 		// For last character
 		lEnd = i + 2
 	}
-	
-	cli.view.textArea.Select(lStart, lEnd - 1)
+
+	cli.view.textArea.Select(lStart, lEnd-1)
 }
