@@ -18,6 +18,7 @@ func TestInitCli(t *testing.T) {
 	assert.NotNil(t, cli.b)
 	assert.NotNil(t, cli.view)
 	assert.NotNil(t, cli.withDir)
+	assert.NotNil(t, cli.toggle)
 }
 
 func TestAddExitModal(t *testing.T) {
