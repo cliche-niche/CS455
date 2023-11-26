@@ -38,7 +38,10 @@ func (b *Blob) InitBlob(name string, blobtype string, location string) error {
 	}
 
 	// read contents of file into b.contents
-	fileInfo, err := b.fptr.Stat()
+	fileInfo, err := b.fptr.Stat(); 
+	if err != nil {
+		return err
+	}
 	buffer := make([]byte, fileInfo.Size())
 	b.fptr.Read(buffer)
 	b.contents = string(buffer)

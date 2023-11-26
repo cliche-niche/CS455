@@ -71,6 +71,18 @@ func (cli *Cli) AddExitModal() {
 	cli.pages.AddPage("exit", modal, false, false)
 }
 
+func (cli *Cli) AddErrorModal() {
+	modal := tview.NewModal().
+			SetText("An unexpected error occured while doing the previous task.").
+			AddButtons([]string {"Confirm"}).
+			SetDoneFunc(
+				func(buttonIndex int, buttonLabel string) {
+					cli.pages.HidePage("error")
+				})
+
+	cli.pages.AddPage("error", modal, false, false)
+}
+
 func (cli *Cli) AppInputCapture() {
 	cli.app.SetInputCapture(
 		func(event *tcell.EventKey) *tcell.EventKey {
@@ -99,6 +111,9 @@ func (cli *Cli) AppInputCapture() {
 			} else if event.Key() == tcell.KeyCtrlQ {
 				selectLineText(cli, event)
 				return event
+			} else if event.Key() == tcell.KeyCtrlF {
+				cli.pages.ShowPage("findandreplace")
+				return nil
 			} else if event.Key() == tcell.KeyF1 {
 				cli.pages.ShowPage("help")
 				return nil

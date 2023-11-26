@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 	"os"
-	"log"
 	"path/filepath"
 
 	"github.com/gdamore/tcell/v2"
@@ -147,7 +146,8 @@ func (mv *View) TreeSelectFunc(cli *Cli) {
 				var b blob.Blob
 				err := b.InitBlob(name, blobtype, path)
 				if err != nil {
-					log.Fatalf("Failed to initialize the blob: %v", err)
+					cli.pages.ShowPage("error")
+					return
 				}
 
 				mv.nextB = &b

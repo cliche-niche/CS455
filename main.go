@@ -49,6 +49,7 @@ func main() {
 	}
 
 	cli.AddExitModal()
+	cli.AddErrorModal()
 	cli.AppInputCapture()
 	cli.AddHelp()
 
