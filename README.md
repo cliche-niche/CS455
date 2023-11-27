@@ -1,11 +1,29 @@
-This repository contains a (CLI) text editor made for the course CS455A (2023-24 I Sem.). Each milestone has a corresponding `.md` file in the [docs](./docs/) directory. Regardless, a brief description of each milestone has been provided below:
+An implementation of a command line text editor written in Golang as part of a course project for CS455 (2023-24 I Sem.) in a team of four (Abhishek ["abhishekshree"](https://github.com/abhishekshree) Shree, Jahnvi ["Janhvi-Rochwani"](https://github.com/Janhvi-Rochwani) Rochwani, Parinay ["parinayc20"](https://github.com/parinayc20) Chauhan, and me, Aditya ["cliche-niche"](https://github.com/cliche-niche) Tanwar).
 
-+ [Milestone 1](./docs/Milestone1.md): Outlining and elaborating on Requirements and Timelines for the project. With a team of 4 - Abhishek ["abhishekshree"](https://github.com/abhishekshree) Shree, Aditya ["cliche-niche"](https://github.com/cliche-niche) Tanwar, Janhvi ["Janhvi-Rochwani"](https://github.com/Janhvi-Rochwani) Rochwani, Parinay ["parinayc20"](https://github.com/parinayc20) Chauhan - the project is divided into 5 milestones <i>(not to be confused with the milestones of the course)</i>, each taking roughly 28 human hours.
-+ [Milestone 2](./docs/Milestone2.md): Implement some of the functionalities mentioned in the project milestone and build a working example. The project requires at least `1.21.x` version of `Go`, and can be run using the following commands:
+## Running
+To compile the project, please ensure you have `1.21x` (or a higher) version of Go installed. Thereafter, you can simply clone the repository and run the following commands:
 ```bash
 go build main.go
 ./main -location="."
 ```
-Please ensure you have `Go` installed. <br>
-The executable can be run the with a command-line argument `location`, where the location of a directory or a file can be given. If this argument is omitted, the application opens with its current directory. <br>
-Most of the basic functionalities have been implemented in this version. The exact progress has been elaborated in the [Milestone 2](./docs/Milestone2.md) file.
+Alternatively, after <i>building</i> the project, you can also run `./main -location=filename.txt` or `./main`. The differences between the three usages are:
++ `./main -location="path/to/directory/`: Opens the editor in the directory given in the path with an interactive view of the directory available on the left.
++ `./main -location="."`: Opens the editor in the same directory as the executable is in.
++ `./main -location="filename.ext"`: Opens just the give file (and not a directory).
+
+## Features
+Upon opening a file, the editor supports features like:
++ Basic editing (cut, copy, paste, undo, redo, etc.)
++ Navigation using keys as well as key combinations
++ Navigation using scrolling
++ Autosave (at regular intervals of 30s)
++ Reminder to save a file before closing
++ Keyboard shortcuts:
+    + `Ctrl-C`: Close the application
+    + `Ctrl-Q`: Copy text if there is any selection. If there is no selection, copy the line the cursor is in
+    + `Ctrl-X`: Cut text if there is any selection. If there is no selection, cut the line the cursor is in
+    + `Ctrl-V`: Paste previously copied/cut text
+    + `Ctrl-S`: Save all changes to the file
+    + `Ctrl-O`: Toggle autosave on/off (initially off)
+    + `F1`: Display help containing shortcuts and more
+    + Some of these shortcuts are available on the front page as well when the application is run
