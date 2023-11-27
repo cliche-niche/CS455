@@ -113,10 +113,10 @@ func (cli *Cli) AppInputCapture() {
 					return nil
 				}
 			} else if event.Key() == tcell.KeyCtrlX {
-				selectLineText(cli, event)
+				selectLineText(cli)
 				return event
 			} else if event.Key() == tcell.KeyCtrlQ {
-				selectLineText(cli, event)
+				selectLineText(cli)
 				return event
 			} else if event.Key() == tcell.KeyF1 {
 				cli.pages.ShowPage("help")
@@ -246,19 +246,16 @@ Double-click to select a word.
 }
 
 func (cli *Cli) RunApp() error {
-
-	// go autoSave(cli.b, cli.view.textArea)
-
 	err := cli.app.SetRoot(cli.pages, true).
 		EnableMouse(true).Run()
 
 	return err
 }
 
-func selectLineText(cli *Cli, event *tcell.EventKey) {
+func selectLineText(cli *Cli) (int, int) {
 	// No selection -> Application selects text
 	if cli.view.textArea.HasSelection() {
-		return
+		return -1, -1
 	}
 
 	row, _, _, _ := cli.view.textArea.GetCursor()
@@ -282,7 +279,8 @@ func selectLineText(cli *Cli, event *tcell.EventKey) {
 		}
 		if row == -1 {
 			lEnd = i
-			break
+			cli.view.textArea.Select(lStart, lEnd-1)
+			return lStart, lEnd
 		}
 
 		// For last character
@@ -290,4 +288,5 @@ func selectLineText(cli *Cli, event *tcell.EventKey) {
 	}
 
 	cli.view.textArea.Select(lStart, lEnd-1)
+	return lStart, lEnd-1
 }

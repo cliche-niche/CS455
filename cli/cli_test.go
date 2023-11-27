@@ -2,9 +2,11 @@ package cli
 
 import (
 	"testing"
+	"strings"
 
 	"github.com/cliche-niche/CS455/blob"
 	"github.com/stretchr/testify/assert"
+	"github.com/gdamore/tcell/v2"
 )
 
 func TestInitCli(t *testing.T) {
@@ -59,4 +61,40 @@ func TestAddHelp(t *testing.T) {
 	cli.AddHelp()
 
 	assert.True(t, cli.pages.HasPage("help"))
+}
+
+func TestSelectStart(t *testing.T){
+	// When cursor is at start
+	var cli Cli
+	var b blob.Blob
+	text := "abc12\ndef34"
+
+	b.InitBlob("", "", "")
+	b.EditBlob(text)
+	cli.InitCli(&b, "", false)
+	
+	cli.view.textArea.SetText(text, true)
+	
+	l, r := selectLineText(&cli)
+	s := text[l : r]
+
+	assert.True(t,  s == text[ : strings.Index(text, "\n")])
+}
+
+func TestSelectEnd(t *testing.T){
+	// When cursor is at end
+	var cli Cli
+	var b blob.Blob
+	text := "abc12\ndef34"
+
+	b.InitBlob("", "", "")
+	b.EditBlob(text)
+	cli.InitCli(&b, "", false)
+	
+	cli.view.textArea.SetText(text, false)
+	
+	l, r := selectLineText(&cli)
+	s := text[l : r]
+
+	assert.True(t,  s == text[strings.Index(text, "\n") + 1 : ])
 }
