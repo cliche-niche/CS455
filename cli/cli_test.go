@@ -98,3 +98,18 @@ func TestSelectEnd(t *testing.T){
 
 	assert.True(t,  s == text[strings.Index(text, "\n") + 1 : ])
 }
+
+func TestSave(t *testing.T){
+	var cli Cli
+	var b blob.Blob
+	
+	// create an empty file and initialize blob with it
+	b.InitBlob("", "", "")
+	cli.InitCli(&b, "", false)
+	cli.AppInputCapture()	
+
+	cli.view.textArea.SetText("TestCtrlS", false)
+	cli.app.GetInputCapture()(tcell.NewEventKey(tcell.KeyCtrlS, 0, tcell.ModNone))
+
+	assert.True(t, cli.view.textArea.GetText() == cli.b.GetContents())
+}

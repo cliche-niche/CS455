@@ -98,7 +98,7 @@ func (cli *Cli) AppInputCapture() {
 				go func() {
 					err := cli.b.SaveBlob()
 					if err != nil {
-						panic(err)
+						cli.pages.ShowPage("error")
 					}
 				}()
 				return nil
